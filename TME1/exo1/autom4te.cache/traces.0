@@ -750,7 +750,11 @@ AC_SUBST([am__untar])
 ])
 m4trace:configure.ac:2: -1- m4_pattern_forbid([^_?A[CHUM]_])
 m4trace:configure.ac:2: -1- m4_pattern_forbid([_AC_])
+<<<<<<< HEAD
 m4trace:configure.ac:2: -1- m4_pattern_forbid([^LIBOBJS$], [do not use LIBOBJS directly, use AC_LIBOBJ (see section `AC_LIBOBJ vs LIBOBJS'])
+=======
+m4trace:configure.ac:2: -1- m4_pattern_forbid([^LIBOBJS$], [do not use LIBOBJS directly, use AC_LIBOBJ (see section 'AC_LIBOBJ vs LIBOBJS'])
+>>>>>>> refs/remotes/origin/master
 m4trace:configure.ac:2: -1- m4_pattern_allow([^AS_FLAGS$])
 m4trace:configure.ac:2: -1- m4_pattern_forbid([^_?m4_])
 m4trace:configure.ac:2: -1- m4_pattern_forbid([^dnl$])
@@ -804,7 +808,11 @@ m4trace:configure.ac:5: -1- AM_INIT_AUTOMAKE([-Wall subdir-objects foreign])
 m4trace:configure.ac:5: -1- m4_pattern_allow([^AM_[A-Z]+FLAGS$])
 m4trace:configure.ac:5: -1- AM_SET_CURRENT_AUTOMAKE_VERSION
 m4trace:configure.ac:5: -1- AM_AUTOMAKE_VERSION([1.16.5])
+<<<<<<< HEAD
 m4trace:configure.ac:5: -1- _AM_AUTOCONF_VERSION([2.71])
+=======
+m4trace:configure.ac:5: -1- _AM_AUTOCONF_VERSION([2.72])
+>>>>>>> refs/remotes/origin/master
 m4trace:configure.ac:5: -1- m4_pattern_allow([^INSTALL_PROGRAM$])
 m4trace:configure.ac:5: -1- m4_pattern_allow([^INSTALL_SCRIPT$])
 m4trace:configure.ac:5: -1- m4_pattern_allow([^INSTALL_DATA$])

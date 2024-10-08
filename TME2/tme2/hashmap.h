@@ -1,13 +1,22 @@
 #pragma once
 #include <iostream>
+<<<<<<< HEAD
 #include <vector>
 #include <forward_list>
 #include <utility> // for std::pair
+=======
+using namespace std;
+#include <vector>
+#include <forward_list>
+>>>>>>> refs/remotes/origin/master
 
 template <typename K, typename V>
 class HashMap
 {
+<<<<<<< HEAD
 public:
+=======
+>>>>>>> refs/remotes/origin/master
     class Entry
     {
     public:
@@ -16,6 +25,7 @@ public:
 
         Entry(K k, V v) : key(k), value(v) {}; // constructor
     };
+<<<<<<< HEAD
 
 private:
     typedef std::forward_list<Entry> list_v;
@@ -71,6 +81,14 @@ public:
     buckets_v buckets;
 
     HashMap(size_t bucket_Count) : buckets(bucket_Count) {}
+=======
+    typedef vector<forward_list<Entry>> buckets_v;
+
+public:
+    buckets_v buckets;
+
+    HashMap(size_t bucket_Count) : buckets(bucket_Count) {};
+>>>>>>> refs/remotes/origin/master
 
     V *getValue(const K &key)
     {
@@ -84,8 +102,12 @@ public:
             }
         }
         return nullptr;
+<<<<<<< HEAD
     }
 
+=======
+    };
+>>>>>>> refs/remotes/origin/master
     bool insert(const K &key, const V &value)
     {
         int keyIndex = std::hash<K>()(key) % size();
@@ -93,6 +115,7 @@ public:
         {
             if (entry.key == key)
             {
+<<<<<<< HEAD
                 entry.value = value; // Update existing value
                 return true;
             }
@@ -115,4 +138,17 @@ public:
     {
         return iterator(buckets, buckets.end());
     }
+=======
+                entry.value = value;
+                return true;
+            }
+        }
+        buckets[keyIndex].emplace_front(key, value);
+        return false;
+    };
+    size_t size()
+    {
+        return buckets.size();
+    }
+>>>>>>> refs/remotes/origin/master
 };
