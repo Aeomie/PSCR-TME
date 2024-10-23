@@ -1,6 +1,8 @@
 #include "Vec3D.h"
 #include "Rayon.h"
 #include "Scene.h"
+#include "Pool.h"
+#include "Queue.h"
 #include <iostream>
 #include <algorithm>
 #include <fstream>
@@ -10,37 +12,40 @@
 using namespace std;
 using namespace pr;
 
-
-void fillScene(Scene & scene, default_random_engine & re) {
+void fillScene(Scene &scene, default_random_engine &re)
+{
 	// Nombre de spheres (rend le probleme plus dur)
 	const int NBSPHERES = 250;
 
 	// on remplit la scene de spheres colorees de taille position et couleur aleatoire
 	uniform_int_distribution<int> distrib(0, 200);
 	uniform_real_distribution<double> distribd(-200, 200);
-	for (int i = 0; i < NBSPHERES; i++) {
+	for (int i = 0; i < NBSPHERES; i++)
+	{
 		// position autour de l'angle de la camera
 		// rayon entre 3 et 33, couleur aleatoire
 		// distrib(re) rend un entier aleatoire extrait de re
-		scene.add(Sphere({50+distribd(re),50 + distribd(re),120 + distribd(re) }, double(distrib(re)%30) + 3.0, Color::random()));
+		scene.add(Sphere({50 + distribd(re), 50 + distribd(re), 120 + distribd(re)}, double(distrib(re) % 30) + 3.0, Color::random()));
 	}
 	// quelques spheres de plus pour ajouter du gout a la scene
-	scene.add(Sphere({50,50,40},15.0,Color::red));
-	scene.add(Sphere({100,20,50},55.0,Color::blue));
-
+	scene.add(Sphere({50, 50, 40}, 15.0, Color::red));
+	scene.add(Sphere({100, 20, 50}, 55.0, Color::blue));
 }
 
 // return the index of the closest object in the scene that intersects "ray"
 // or -1 if the ray does not intersect any object.
-int findClosestInter(const Scene & scene, const Rayon & ray) {
+int findClosestInter(const Scene &scene, const Rayon &ray)
+{
 	auto minz = std::numeric_limits<float>::max();
 	int targetSphere = -1;
 	int index = 0;
-	for (const auto & obj : scene) {
+	for (const auto &obj : scene)
+	{
 		// rend la distance de l'objet a la camera
 		auto zinter = obj.intersects(ray);
 		// si intersection plus proche  ?
-		if (zinter < minz) {
+		if (zinter < minz)
+		{
 			minz = zinter;
 			targetSphere = index;
 		}
@@ -51,7 +56,8 @@ int findClosestInter(const Scene & scene, const Rayon & ray) {
 
 // Calcule l'angle d'incidence du rayon à la sphere, cumule l'éclairage des lumières
 // En déduit la couleur d'un pixel de l'écran.
-Color computeColor(const Sphere & obj, const Rayon & ray, const Vec3D & camera, std::vector<Vec3D> & lights) {
+Color computeColor(const Sphere &obj, const Rayon &ray, const Vec3D &camera, std::vector<Vec3D> &lights)
+{
 	Color finalcolor = obj.getColor();
 
 	// calcul du rayon et de sa normale a la sphere
@@ -65,12 +71,14 @@ Color computeColor(const Sphere & obj, const Rayon & ray, const Vec3D & camera, 
 	// le niveau d'eclairage total contribue par les lumieres 0 sombre 1 total lumiere
 	double dt = 0;
 	// modifier par l'eclairage la couleur
-	for (const auto & light : lights) {
+	for (const auto &light : lights)
+	{
 		// le vecteur de la lumiere au point d'intersection
 		Vec3D tolight = (light - intersection);
 		// si on est du bon cote de la sphere, i.e. le rayon n'intersecte pas avant de l'autre cote
-		if (obj.intersects(Rayon(light,intersection)) >= tolight.length() - 0.05 ) {   //  epsilon 0.05 for double issues
-			dt += tolight.normalize() & normal ; // l'angle (scalaire) donne la puissance de la lumiere reflechie
+		if (obj.intersects(Rayon(light, intersection)) >= tolight.length() - 0.05)
+		{										//  epsilon 0.05 for double issues
+			dt += tolight.normalize() & normal; // l'angle (scalaire) donne la puissance de la lumiere reflechie
 		}
 	}
 	// eclairage total
@@ -80,17 +88,22 @@ Color computeColor(const Sphere & obj, const Rayon & ray, const Vec3D & camera, 
 }
 
 // produit une image dans path, représentant les pixels.
-void exportImage(const char * path, size_t width, size_t height, Color * pixels) {
+void exportImage(const char *path, size_t width, size_t height, Color *pixels)
+{
 	// ppm est un format ultra basique
-	ofstream img (path);
+	ofstream img(path);
 	// P3 signifie : les pixels un par un en ascii
 	img << "P3" << endl; // ascii format, colors
 	// largeur hauteur valeur max d'une couleur (=255 un char)
-	img << width  << "\n"<< height << "\n" << "255" << endl;
+	img << width << "\n"
+		<< height << "\n"
+		<< "255" << endl;
 	// tous les pixels au format RGB
-	for (size_t  y = 0 ; y < height ; y++) {
-		for (size_t x =0 ; x < width ; x++) {
-			Color & pixel = pixels[x*height + y];
+	for (size_t y = 0; y < height; y++)
+	{
+		for (size_t x = 0; x < width; x++)
+		{
+			Color &pixel = pixels[x * height + y];
 			img << pixel << '\n';
 		}
 	}
@@ -101,17 +114,18 @@ void exportImage(const char * path, size_t width, size_t height, Color * pixels)
 // NB : en francais pour le cours, preferez coder en english toujours.
 // pas d'accents pour eviter les soucis d'encodage
 
-int main () {
+int main()
+{
 
 	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
 	// on pose une graine basee sur la date
 	default_random_engine re(std::chrono::system_clock::now().time_since_epoch().count());
 	// definir la Scene : resolution de l'image
-	Scene scene (1000,1000);
+	Scene scene(1000, 1000);
 	// remplir avec un peu d'aléatoire
 	fillScene(scene, re);
-	
-	// lumieres 
+
+	// lumieres
 	vector<Vec3D> lights;
 	lights.reserve(3);
 	lights.emplace_back(Vec3D(50, 50, -50));
@@ -120,44 +134,49 @@ int main () {
 
 	// les points de l'ecran, en coordonnées 3D, au sein de la Scene.
 	// on tire un rayon de l'observateur vers chacun de ces points
-	const Scene::screen_t & screen = scene.getScreenPoints();
+	const Scene::screen_t &screen = scene.getScreenPoints();
 
 	// Les couleurs des pixels dans l'image finale
-	Color * pixels = new Color[scene.getWidth() * scene.getHeight()];
+	Color *pixels = new Color[scene.getWidth() * scene.getHeight()];
+
+	/// QUESTION 9
 
 	// pour chaque pixel, calculer sa couleur
-	for (int x =0 ; x < scene.getWidth() ; x++) {
-		for (int  y = 0 ; y < scene.getHeight() ; y++) {
+	for (int x = 0; x < scene.getWidth(); x++)
+	{
+		for (int y = 0; y < scene.getHeight(); y++)
+		{
 			// le point de l'ecran par lequel passe ce rayon
-			auto & screenPoint = screen[y][x];
+			auto &screenPoint = screen[y][x];
 			// le rayon a inspecter
-			Rayon  ray(scene.getCameraPos(), screenPoint);
+			Rayon ray(scene.getCameraPos(), screenPoint);
 
 			int targetSphere = findClosestInter(scene, ray);
 
-			if (targetSphere == -1) {
+			if (targetSphere == -1)
+			{
 				// keep background color
-				continue ;
-			} else {
-				const Sphere & obj = *(scene.begin() + targetSphere);
+				continue;
+			}
+			else
+			{
+				const Sphere &obj = *(scene.begin() + targetSphere);
 				// pixel prend la couleur de l'objet
 				Color finalcolor = computeColor(obj, ray, scene.getCameraPos(), lights);
 				// le point de l'image (pixel) dont on vient de calculer la couleur
-				Color & pixel = pixels[y*scene.getHeight() + x];
+				Color &pixel = pixels[y * scene.getHeight() + x];
 				// mettre a jour la couleur du pixel dans l'image finale.
 				pixel = finalcolor;
 			}
-
 		}
 	}
 
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	    std::cout << "Total time "
-	              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-	              << "ms.\n";
+	std::cout << "Total time "
+			  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+			  << "ms.\n";
 
-	exportImage("toto.ppm",scene.getWidth(), scene.getHeight() , pixels);
+	exportImage("toto.ppm", scene.getWidth(), scene.getHeight(), pixels);
 
 	return 0;
 }
-
