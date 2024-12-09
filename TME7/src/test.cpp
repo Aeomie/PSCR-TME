@@ -1,60 +1,80 @@
-#include <fcntl.h>    /* For O_* constants */
-#include <sys/stat.h> /* For mode constants */
-#include <semaphore.h>
-#include <sys/wait.h>
-#include <stdio.h>
+#include <ostream>
+#include <iostream>
+#include <semaphore>
+#include <unistd.h>
+
+#include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <iostream>
+#include <stdio.h>
+#include <string.h>
 
-int main()
+int main(int argc, char **argv)
 {
-    // Create mutex initialized to 0
-    sem_t *smutex1 = sem_open("/monsem1", O_CREAT | O_EXCL | O_RDWR, 0666, 0);
-    if (smutex1 == SEM_FAILED)
-    {
-        perror("sem create");
-        exit(1);
-    }
+    int tubeDesc[2];
+    pid_t pid_fils;
 
-    // Create mutex initialized to 0
-    sem_t *smutex2 = sem_open("/monsem2", O_CREAT | O_EXCL | O_RDWR, 0666, 0);
-    if (smutex2 == SEM_FAILED)
+    // Step 1: Identify the '|' symbol and split the arguments
+    int i = 0;
+    for (i; i < argc; i++)
     {
-        perror("sem create");
-        exit(1);
-    }
-
-    pid_t f = fork();
-    if (f == 0)
-    {
-        // Child process
-        for (int i = 0; i < 10; i++)
+        if (!strcmp(argv[i], "|"))
         {
-            sem_wait(smutex1);
-            std::cout << "Ping" << std::endl;
-            sem_post(smutex2);
+            argv[i] = nullptr;
+            break;
         }
-        sem_close(smutex1);
-        sem_close(smutex2);
+    }
+
+    if (i == argc)
+    {
+        exit(1);
+    }
+
+    // Create the pipe
+    if (pipe(tubeDesc) == -1)
+    {
+        perror("pipe");
+        exit(1);
+    }
+
+    pid_fils = fork();
+    // Fork to create a child process
+    if (pid_fils == -1)
+    {
+        perror("fork");
+        exit(2);
+    }
+
+    if (pid_fils == 0)
+    { // Child process
+        // Redirect stdout to the write end of the pipe
+        dup2(tubeDesc[1], STDOUT_FILENO);
+
+        // Close both ends of the pipe in the child process
+        close(tubeDesc[1]);
+        close(tubeDesc[0]);
+
+        if (execvp(argv[1], argv + 1) == -1)
+        {
+            perror("execv");
+            exit(3);
+        }
     }
     else
-    {
-        // Parent process
-        for (int i = 0; i < 10; i++)
-        {
-            sem_post(smutex1);
-            sem_wait(smutex2);
-            std::cout << "Pong" << std::endl;
-        }
-        sem_close(smutex1);
-        sem_close(smutex2);
+    { // Parent process
+        // Redirect stdin to the read end of the pipe
+        dup2(tubeDesc[0], STDIN_FILENO);
 
-        // Cleanup
-        sem_unlink("/monsem1");
-        sem_unlink("/monsem2");
-        wait(nullptr);
+        // Close both ends of the pipe in the parent process
+        close(tubeDesc[0]);
+        close(tubeDesc[1]);
+
+        if (execvp(argv[i + 1], argv + i + 1) == -1)
+        {
+            perror("execv");
+            exit(3);
+        }
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }

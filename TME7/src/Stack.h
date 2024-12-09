@@ -74,7 +74,7 @@ namespace pr
 
 			Stack<T> *stack = new (shm) Stack(); // creates it on shm
 
-			closeStack(stack);
+			closeStack(stack); // to make sure that it doesnt stay open
 			return stack;
 		}
 
