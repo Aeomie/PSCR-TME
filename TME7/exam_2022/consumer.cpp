@@ -31,7 +31,7 @@ int main()
     }
 
     // Initialize the shared memory structure
-    auto *buffer = static_cast<BufferNReadProc *>(addr);
+    BufferNReadProc *buffer = BufferNReadProc::openBuffer("/mybuffer");
 
     // Consumer reads from the buffer
     buffer->consumer(buffer);
