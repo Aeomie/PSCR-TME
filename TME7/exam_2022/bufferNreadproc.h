@@ -17,10 +17,12 @@ using namespace std;
 
 class BufferNReadProc
 {
-    sem_t semEmpty, semFull, semMutex, semCount;
+    sem_t semEmpty, semFull, semMutex;
     char buffer[BUFFERSIZE]{};
     const int N;
+    std::atomic<int> read_Count;
     std::atomic<time_t> last_activity;
+    std::atomic<bool> signaled;
 
 public:
     explicit BufferNReadProc(int n) : N(n)
@@ -28,8 +30,7 @@ public:
         sem_init(&semEmpty, 1, 1); // Start with buffer empty
         sem_init(&semFull, 1, 0);  // No data initially
         sem_init(&semMutex, 1, 1); // Mutex for buffer
-        sem_init(&semCount, 1, N); // Allow `N` reads
-        last_activity = time(nullptr);  
+        last_activity = time(nullptr);
     }
 
     ~BufferNReadProc()
@@ -37,7 +38,6 @@ public:
         sem_destroy(&semEmpty);
         sem_destroy(&semFull);
         sem_destroy(&semMutex);
-        sem_destroy(&semCount);
     }
 
     void write(const char *msg)
@@ -46,6 +46,7 @@ public:
         sem_wait(&semMutex); // Lock buffer access
 
         memcpy(buffer, msg, BUFFERSIZE); // Write message
+        read_Count = 0;  
         update_activity();
 
         sem_post(&semMutex); // Unlock buffer
@@ -54,15 +55,21 @@ public:
 
     void read(char *msg)
     {
-        sem_wait(&semCount); // Wait until reads are allowed
         sem_wait(&semFull);  // Wait for available data
         sem_wait(&semMutex); // Lock buffer access
 
         memcpy(msg, buffer, BUFFERSIZE); // Read message
+        read_Count++;
+        std::cout << "msg has been read : " << read_Count << " times" << std::endl;
         update_activity();
 
         sem_post(&semMutex); // Unlock buffer
-        sem_post(&semEmpty); // Signal buffer space available
+        if(read_Count  >= N){
+            std::cout << "max limit of reads reached for this message" << std::endl;
+            sem_post(&semEmpty); // Signal buffer space available
+            return;
+        }
+        sem_post(&semFull); // Signal buffer space available
     }
 
     static void producer(BufferNReadProc *buffer, const char *msg)

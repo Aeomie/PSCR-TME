@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
         usleep(100000); // sleep every 0.1 sec
         BufferNReadProc *buffer = BufferNReadProc::openBuffer(buff_name);
         time_t now = time(nullptr);
-            if((now - buffer->get_last_activity()) >= 5){
+            if((now - buffer->get_last_activity()) >= 20){
                 // return false and get out of loop
                 std::cout << "time now : " << now << std::endl;; 
                 std::cout << "time last updated:" << buffer->get_last_activity() << std::endl;
