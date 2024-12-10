@@ -11,6 +11,8 @@ int read_count;
 bool reading_only;
 bool close_server;
 char buffer[BUFFERSIZE] = { 0 };
+
+
 void handle_write(int write_socket) {
     if(!reading_only){
         struct sockaddr_in client_addr;
@@ -37,29 +39,6 @@ void handle_write(int write_socket) {
         read_count = 0;
         close(client_sock);
     }
-    /*
-    else{
-        struct sockaddr_in client_addr;
-        socklen_t addr_len = sizeof(client_addr);
-
-        int client_sock = accept(write_socket, nullptr, nullptr);
-        if (client_sock == -1) {
-            perror("Failed to accept read connection");
-            return;
-        }
-
-        const char* safe_message = "Server is on mode Read only , Please finish reading before inputting";
-
-        ssize_t bytes_sent = send(client_sock, safe_message, strlen(safe_message) + 1, 0);
-        if (bytes_sent == -1) {
-            perror("Failed to send message");
-        } else {
-            printf("Message sent to client.\n");
-        }
-
-        close(client_sock);
-    }
-    */
 }
 
 void handle_read(int read_socket, int N) {
@@ -145,7 +124,6 @@ int main(int argc, char *argv[]){
     printf("  - Read Port: %d\n", READ_PORT);
     printf("  - N: %d\n", N);
     printf("  - Read_count Init: %d\n", read_count);
-    char message[BUFFERSIZE] = {0};
     while(!close_server){
         if(!reading_only){
             handle_write(writing_socket);
