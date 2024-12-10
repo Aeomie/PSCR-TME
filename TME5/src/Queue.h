@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include <mutex>
-#include <barrier>
+#include <condition_variable>
 namespace pr
 {
 
@@ -15,14 +15,11 @@ namespace pr
 		const size_t allocsize;
 		size_t begin;
 		size_t sz;
+		bool isBlocking;
 		mutable std::mutex m;
 		std::condition_variable cond;
-		bool isBlocking;
-		std::barrier barrier;
-
 		// fonctions private, sans protection mutex
-		bool
-		empty() const
+		bool empty() const
 		{
 			return sz == 0;
 		}
@@ -32,11 +29,12 @@ namespace pr
 		}
 
 	public:
-		Queue(size_t size) : allocsize(size), begin(0), sz(0)
+		Queue(size_t size) : allocsize(size), begin(0), sz(0), isBlocking(false)
 		{
 			tab = new T *[size];
 			memset(tab, 0, size * sizeof(T *));
 		}
+
 		size_t size() const
 		{
 			std::unique_lock<std::mutex> lg(m);
@@ -54,10 +52,7 @@ namespace pr
 			sz--;
 			begin = (begin + 1) % allocsize;
 
-			if (sz == allocsize - 1)
-			{
-				cond.notify_all();
-			}
+			cond.notify_all();
 			return ret;
 		}
 		bool push(T *elt)
@@ -70,17 +65,14 @@ namespace pr
 			tab[(begin + sz) % allocsize] = elt;
 			sz++;
 
-			if (sz == 1)
-			{
-				cond.notify_all();
-			}
+			cond.notify_all();
 			return true;
 		}
 
-		void setBlocking(bool block)
+		void setBlocking(bool Block)
 		{
-			std::unique_lock<mutex> lg(m);
-			isBlocking = block;
+			std::unique_lock<std::mutex> lg(m);
+			isBlocking = true;
 			cond.notify_all();
 		}
 		~Queue()

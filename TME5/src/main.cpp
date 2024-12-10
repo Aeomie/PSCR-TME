@@ -1,8 +1,6 @@
 #include "Vec3D.h"
 #include "Rayon.h"
 #include "Scene.h"
-#include "Pool.h"
-#include "Queue.h"
 #include <iostream>
 #include <algorithm>
 #include <fstream>
@@ -138,8 +136,6 @@ int main()
 
 	// Les couleurs des pixels dans l'image finale
 	Color *pixels = new Color[scene.getWidth() * scene.getHeight()];
-
-	/// QUESTION 9
 
 	// pour chaque pixel, calculer sa couleur
 	for (int x = 0; x < scene.getWidth(); x++)

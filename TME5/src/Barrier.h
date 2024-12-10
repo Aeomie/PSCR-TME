@@ -1,41 +1,35 @@
-#pragma once
-
-#include <barrier>
-#include "Queue.h"
-#include "Job.h"
-#include <vector>
-#include <thread>
+#include <iostream>
 #include <mutex>
-namespace pr
+#include <condition_variable>
+
+class Barrier
 {
-    class Barrier
+    int max;
+    int cur;
+    std::mutex m;
+    std::condition_variable cv;
+
+public:
+    Barrier(int max) : max(max), cur(0) {}
+    // Copy constructor
+    Barrier(const Barrier &other)
+        : max(other.max), cur(other.cur) {};
+    void done()
     {
-        int max;
-        int cur;
-        std::mutex m;
-        std::condition_variable cond;
-
-        Barrier(int max) : max(max), cur(0) {}
-
-    public:
-        void done()
+        std::unique_lock<std::mutex> lock(m);
+        cur++;
+        if (cur >= max)
         {
-            std::unique_lock<std::mutex> l(m);
-            cur++;
-            if (cur >= max)
-            {
-                cond.notify_all();
-            }
+            cv.notify_all();
         }
+    }
 
-        void waitFor()
+    void waitFor()
+    {
+        std::unique_lock<std::mutex> lock(m);
+        while (cur < max)
         {
-            std::unique_lock<std::mutex> l(m);
-            while (cur != max)
-            {
-                cond.wait(l);
-            }
+            cv.wait(lock);
         }
-    };
-
-}
+    }
+};
